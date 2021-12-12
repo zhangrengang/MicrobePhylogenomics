@@ -843,11 +843,11 @@ def single_copy_cds_align2(OFdir, pepSeqs, cdsSeqs, outALN, species=None, tmpdir
 		cmd_list += [cmds]
 		alnfiles += [alnCodon]
 	cmd_file = '{}/cmds.list'.format(tmpdir)
-	run_job(cmd_file, cmd_list=cmd_list, tc_tasks=ncpu, mode=mode)
+	run_job(cmd_file, cmd_list=cmd_list, tc_tasks=ncpu, mode=mode, fail_exit=False)
 	alnfiles2 = [alnfile for alnfile in alnfiles if os.path.exists(alnfile)]
 	non_exists = set(alnfiles) - set(alnfiles2)
 	if non_exists:
-		print >> sys.stderr, '{} not exists, check.'.format(non_exists)
+		print >> sys.stderr, '{} not exists, check please.'.format(non_exists)
 	catAln(alnfiles2, outALN)
 
 def collinear_og_trees(OFdir, collinearity, taxon, seqfile, tmpdir='/io/tmp/share', min_N=10):
@@ -1688,13 +1688,17 @@ def get_Blast(OFdir, species, outblast):
 	result.get_Blast(species, fout=outblast)
 def parse_key_opts(args):
 	d = {}
-	for arg in args:
+	pops = []
+	for i, arg in enumerate(args):
 		kv = arg.split('=', 1)
 		if len(kv) != 2:
 			continue
+		pops += [i]
 		key, val = kv
 		val = tr_numeric(val)
 		d[key] = val
+	for i in sorted(pops, reverse=1):
+		args.pop(i)
 	return d
 
 def tr_numeric(val):
@@ -1705,7 +1709,7 @@ def tr_numeric(val):
 	
 def main():
 	subcommand = sys.argv[1]
-	kargs = parse_key_opts(sys.argv[2:])
+	kargs = parse_key_opts(sys.argv)
 	if subcommand == 'reTree': # 重新建树，加上bootstrap
 		OFdir=sys.argv[2]
 		outdir=sys.argv[3]
