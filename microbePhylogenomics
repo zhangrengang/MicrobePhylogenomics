@@ -1,6 +1,5 @@
 #!/bin/bash
-set -xve
-
+#set -xve
 rootdir=$(realpath $(dirname $0))
 design=species.design
 [ "x$1" != "x" ] && design=$1
