@@ -58,6 +58,7 @@ def catAln(inALNs, outALN, allow_missing=True, idmap=None):
 	xlens = ','.join(map(str, lens))
 	names = ','.join(names)
 	description = 'taxa:{} genes:{} sites:{} blocks:{} names:{}'.format(ntax, len(lens), sum(lens), xlens, names)
+	logger.info('Concatenating {} genes of {} taxa ({} sites)'.format(len(lens), ntax, sum(lens)))
 	for sp, seqs in d_seqs.items():
 		seqs = ''.join(seqs)
 		print >> outALN, '>{} {}\n{}'.format(sp, description, seqs)
