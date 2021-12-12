@@ -1,0 +1,10 @@
+test/test.sh
+test/all_species_gene.gff
+test/cds.fa
+test/chr.list
+test/OrthoFinder
+test/pep.faa
+test/reference
+test/Species_Tree
+merge.code
+*.pyc

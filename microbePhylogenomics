@@ -1,0 +1,80 @@
+#!/bin/bash
+rootdir=$(realpath $(dirname $0))
+design=species.design
+[ "x$1" != "x" ] && design=$1
+outgroup=$(awk '{print $1}' $design | head -n1) 
+[ "x$2" != "x" ] && outgroup=$2
+[ ! -s $design ] &&  echo "$design is empty, exiting" && exit
+ncpu=10
+
+# download from GenBank or GWH
+echo "Downloading genomic data"
+sps=$design
+refdir=reference
+cat $sps | while read LINE
+do
+	arr=($LINE)
+	sp=${arr[0]}
+	url=${arr[1]}
+	spdir=$refdir/$sp
+#	echo -e "\tpreparing $sp" 
+	if [ ! -s $spdir/id_mapping.txt ] || [ ! -s $spdir/pep.faa ] || [ ! -s $spdir/cds.fa ]; then
+		echo "(mkdir -p $spdir && cd $spdir && python $rootdir/src/preIdmap.py -dl "$url" &> standard.log)"
+#		echo -e "$sp\t$url\tprepared"
+	else
+#		echo $sp skipped
+		echo 
+	fi
+done | python $rootdir/src/RunCmdsMP.py -m local -p $ncpu
+
+# prepare sequence files
+echo "Standardizing genomic data"
+pepdir=OrthoFinder/
+[ -f prepare.failed ] && rm prepare.failed
+python $rootdir/src/idmap2mcsan.py $design $refdir > all_species_gene.gff 2> chr.list &
+mkdir -p $pepdir
+for seq in pep.faa cds.fa
+do
+	for SP in `cut -f 1 species.design`
+	do
+        [ -s $refdir/$SP/$seq ] || echo $refdir/$SP/$seq >> prepare.failed
+#        orthomclAdjustFasta $SP $refdir/$SP/$seq 1 > /dev/null
+		python $rootdir/src/orthomclAdjustFasta.py $SP $refdir/$SP/$seq 1 > $SP.fasta
+        cat $SP.fasta
+        if [ $seq = "pep.faa" ]; then
+                mv $SP.fasta $pepdir
+        else
+                rm $SP.fasta
+        fi
+	done > $seq
+done
+wait
+[ -s prepare.failed ] && echo "Warnings:" && cat prepare.failed
+
+# run orthofinder
+echo "Runing orthofinder to identify orthogroups"
+fastadir=$pepdir
+tmpdir=/tmp/pickle.$$
+mkdir -p $tmpdir
+orthofinder -f $fastadir -M msa -T fasttree -p $tmpdir -t $ncpu
+
+# single-copy OG alignments
+echo "Aligning single-copy orthogroups for phylogeny"
+mkdir Species_Tree -p
+cd Species_Tree
+species=
+[ -s species.design ] && species=species.design
+ofdir=$(ls -t ../OrthoFinder/OrthoFinder/Results_*/ -d | head -n1)
+python $rootdir/src/OrthoFinder.py single_copy_cds2 $ofdir ../pep.faa ../cds.fa $species ncpu=$ncpu mode=local > singlecopy_cds.fa
+#python $rootdir/src/OrthoFinder.py catAln tmp/*pep.aln > singlecopy_pep.faa
+
+# iqtree
+echo "Constructing phylogenomic tree"
+root=$outgroup
+[ $root ] && opts="-o $root"
+iqtree -s singlecopy_cds.fa -bb 1000 -nt AUTO $opts > /dev/null
+[ $root ] && nw_reroot singlecopy_cds.fa.treefile $root > singlecopy_cds.fa.treefile.rooted
+#nw_rename singlecopy_cds.fa.treefile.rooted name.mapping > singlecopy_cds.fa.treefile.rooted.rename
+
+echo "The final tree: $(realpath singlecopy_cds.fa.treefile.rooted) which can be visualized by nd_display or Figtree, etc."
+
