@@ -73,7 +73,7 @@ python $rootdir/src/OrthoFinder.py single_copy_cds2 $ofdir ../pep.faa ../cds.fa 
 echo "Constructing phylogenomic tree"
 root=$outgroup
 [ $root ] && opts="-o $root"
-iqtree -s singlecopy_cds.fa -bb 1000 -nt AUTO $opts > /dev/null
+iqtree -s singlecopy_cds.fa -bb 1000 -nt $ncpu $opts > /dev/null
 [ $root ] && nw_reroot singlecopy_cds.fa.treefile $root > singlecopy_cds.fa.treefile.rooted
 #nw_rename singlecopy_cds.fa.treefile.rooted name.mapping > singlecopy_cds.fa.treefile.rooted.rename
 
