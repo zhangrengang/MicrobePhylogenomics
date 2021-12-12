@@ -1,3 +1,4 @@
+.gitignore
 test/test.sh
 test/all_species_gene.gff
 test/cds.fa
