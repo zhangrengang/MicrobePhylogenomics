@@ -33,3 +33,9 @@ Note that the blank or other special characters are not supported in the first c
 ```
 ../microbePhylogenomics species.design Cucumibacter_marinus
 ```
+
+### Outputs ###
+Check the output phylogeny `Species_Tree/singlecopy_cds.fa.treefile.rooted` by:
+```
+nw_display Species_Tree/singlecopy_cds.fa.treefile.rooted
+```
