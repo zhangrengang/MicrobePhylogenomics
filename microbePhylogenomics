@@ -57,7 +57,7 @@ echo "Runing orthofinder to identify orthogroups"
 fastadir=$pepdir
 tmpdir=/tmp/pickle.$$
 mkdir -p $tmpdir
-#orthofinder -f $fastadir -M msa -T fasttree -p $tmpdir -t $ncpu
+orthofinder -f $fastadir -M msa -T fasttree -p $tmpdir -t $ncpu
 
 # single-copy OG alignments
 echo "Aligning single-copy orthogroups for phylogeny"
@@ -77,5 +77,5 @@ iqtree -s singlecopy_cds.fa -bb 1000 -nt $ncpu $opts > /dev/null
 [ $root ] && nw_reroot singlecopy_cds.fa.treefile $root > singlecopy_cds.fa.treefile.rooted
 #nw_rename singlecopy_cds.fa.treefile.rooted name.mapping > singlecopy_cds.fa.treefile.rooted.rename
 
-echo "The final tree: $(realpath singlecopy_cds.fa.treefile.rooted) which can be visualized by nd_display or Figtree, etc."
+echo "The final tree: '$(realpath singlecopy_cds.fa.treefile.rooted)' that can be visualized by nd_display or Figtree, etc."
 
